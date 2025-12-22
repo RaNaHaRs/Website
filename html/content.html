@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Learning Content • Disastr</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script src="../js/auth.js" defer></script>
+  <script src="../js/content.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = window.authStore.getSession();
+      if (!s) { window.location.href = 'index.html'; return; }
+      const email = s.email;
+      const modules = window.contentStore.getModules();
+      const done = new Set(window.contentStore.getUserCompletions(email).map(c => c.moduleId));
+      const list = document.getElementById('list');
+
+      function render() {
+        list.innerHTML = modules.map(m => `
+          <div class="video-card">
+            <div class="vc-body">
+              <div class="vc-title">${m.title}</div>
+              <div class="vc-meta">${m.type} · ${m.durationMin} min</div>
+              <div class="actions">
+                <label class="muted"><input type="checkbox" data-mod="${m.id}" ${done.has(m.id)?'checked':''}/> Mark complete</label>
+              </div>
+            </div>
+          </div>
+        `).join('');
+        list.querySelectorAll('input[type="checkbox"][data-mod]').forEach(cb => {
+          cb.addEventListener('change', () => {
+            const id = cb.getAttribute('data-mod');
+            window.contentStore.setCompletion({ email, moduleId: id, completed: cb.checked });
+          });
+        });
+      }
+
+      render();
+    });
+  </script>
+</head>
+<body>
+  <main class="container">
+    <section class="card card-wide" aria-labelledby="contentTitle">
+      <div class="card-header">
+        <h1 id="contentTitle" class="card-title">Learning Content</h1>
+        <p class="card-subtitle">Track your module progress</p>
+      </div>
+      <div class="card-body">
+        <div id="list" class="video-grid"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+

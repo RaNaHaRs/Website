@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teacher Dashboard • Disastr</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script src="../js/quiz.js" defer></script>
+  <script src="../js/auth.js" defer></script>
+  <script src="../js/progress.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = window.authStore.getSession();
+      if (!s || s.role !== 'teacher') { window.location.replace('index.html'); return; }
+      const container = document.getElementById('gradingContainer');
+      const logout = document.getElementById('logout');
+      const timer = document.getElementById('timer');
+      const quizzes = window.quizStore.getQuizzes();
+      const submissions = window.quizStore.getSubmissions();
+
+      function renderGradingCard(quiz, submission) {
+        const grade = window.quizStore.findGrade(quiz.id, submission.studentEmail);
+        const formId = `grade-${quiz.id}-${btoa(submission.studentEmail).replace(/=/g,'')}`;
+        return `
+          <section class="card" style="margin-top:16px" aria-labelledby="${formId}-title">
+            <div class="card-header">
+              <h2 id="${formId}-title" class="card-title">${quiz.title} — ${submission.studentEmail}</h2>
+              <p class="card-subtitle">${grade ? `Graded: ${grade.score}/${quiz.questions.length}` : 'Awaiting grade'}</p>
+            </div>
+            <div class="card-body">
+              <div class="form" style="margin-top:0">
+                ${quiz.questions.map((q, idx) => `
+                  <div class="field">
+                    <label class="label">${idx+1}. ${q.prompt}</label>
+                    <div class="muted">Answer: <strong>${(submission.answers[q.id]||'').replace(/</g,'&lt;')}</strong></div>
+                  </div>
+                `).join('')}
+                <form id="${formId}" data-quiz-id="${quiz.id}" data-student="${submission.studentEmail}" class="row" style="margin-top:8px; gap:8px; align-items:center;">
+                  <label class="label" for="${formId}-score">Score</label>
+                  <input class="input" style="max-width:100px" id="${formId}-score" name="score" type="number" min="0" max="${quiz.questions.length}" step="1" value="${grade ? grade.score : ''}" ${grade ? 'disabled' : ''} />
+                  ${grade ? '<span class="muted">Already graded</span>' : '<button class="btn btn-primary" type="submit">Save grade</button>'}
+                </form>
+              </div>
+            </div>
+          </section>
+        `;
+      }
+
+      function mount() {
+        const byQuiz = new Map(quizzes.map(q => [q.id, q]));
+        const items = submissions.map(s => ({ quiz: byQuiz.get(s.quizId), submission: s }))
+          .filter(x => !!x.quiz);
+        if (items.length === 0) {
+          container.innerHTML = '<section class="card" style="margin-top:16px"><div class="card-body"><div class="muted">No submissions yet. Ask students to submit their quizzes.</div></div></section>';
+          return;
+        }
+        container.innerHTML = items.map(x => renderGradingCard(x.quiz, x.submission)).join('');
+        items.forEach(x => {
+          const formId = `grade-${x.quiz.id}-${btoa(x.submission.studentEmail).replace(/=/g,'')}`;
+          const form = document.getElementById(formId);
+          if (!form) return;
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const data = new FormData(form);
+            const score = parseInt(data.get('score'), 10);
+            if (Number.isNaN(score)) { alert('Enter a valid score'); return; }
+            window.quizStore.saveGrade({ quizId: x.quiz.id, studentEmail: x.submission.studentEmail, score, gradedAt: Date.now() });
+            alert('Grade saved.');
+            mount();
+          });
+        });
+        if (logout) {
+          logout.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.progressStore.stopTimer(s.email);
+            window.authStore.clearSession();
+            window.location.replace('index.html');
+          });
+        }
+        // start timer
+        window.progressStore.startTimer(s.email);
+        const tick = () => { if (timer) timer.textContent = window.progressStore.formatMs(window.progressStore.getTime(s.email)); };
+        tick();
+        setInterval(tick, 1000);
+      }
+
+      mount();
+    });
+  </script>
+</head>
+<body>
+  <main class="container">
+    <section class="card card-wide" aria-labelledby="teacherTitle">
+      <div class="card-header">
+        <h1 id="teacherTitle" class="card-title">Teacher Dashboard</h1>
+        <p class="card-subtitle">Welcome, Teacher! Track progress and grade quizzes.</p>
+      </div>
+      <div class="card-body">
+        <div class="form" style="margin-top:0">
+          <div id="progress" class="muted"></div>
+          <div class="actions" style="margin-top:12px">
+            <a class="btn btn-primary" href="teacher-content.html">Learning Content</a>
+            <a class="btn btn-ghost" href="teacher-quizzes.html">Review Quizzes</a>
+            <div class="row">
+              <a class="link" href="#" id="logout">Log out</a>
+              <span class="muted"></span>
+              <a class="link" href="teacher-signup.html">Create another teacher account</a>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px"><span class="muted">Time spent:</span> <strong><span id="timer">00:00:00</span></strong></div>
+        </div>
+      </div>
+    </section>
+    <div id="gradingContainer" style="width:100%; max-width: 880px;"></div>
+  </main>
+</body>
+</html>
+
+

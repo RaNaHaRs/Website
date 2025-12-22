@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Dashboard • Disastr</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script src="../js/auth.js" defer></script>
+  <script src="../js/content.js" defer></script>
+  <script src="../js/progress.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = window.authStore.getSession();
+      if (!s || s.role !== 'student') { window.location.replace('index.html'); return; }
+      const email = s.email;
+      const progressEl = document.getElementById('progress');
+      const logout = document.getElementById('logout');
+      const bar = document.getElementById('bar');
+      const timer = document.getElementById('timer');
+
+      function renderQuiz(quiz) {
+        const existing = window.quizStore.findSubmission(quiz.id, email);
+        const grade = window.quizStore.findGrade(quiz.id, email);
+        const disable = !!grade; // once graded, lock
+        const answers = existing ? existing.answers : {};
+        const formId = `form-${quiz.id}`;
+        return `
+          <section class="card" style="margin-top:16px" aria-labelledby="${quiz.id}-title">
+            <div class="card-header">
+              <h2 id="${quiz.id}-title" class="card-title">${quiz.title}</h2>
+              <p class="card-subtitle">${grade ? `Graded: ${grade.score}/` + quiz.questions.length : (existing ? 'Submitted · awaiting grading' : 'Attempt the quiz')}</p>
+            </div>
+            <div class="card-body">
+              <form class="form" id="${formId}" data-quiz-id="${quiz.id}">
+                ${quiz.questions.map((q, idx) => `
+                  <div class="field">
+                    <label class="label" for="${quiz.id}-${q.id}">${idx+1}. ${q.prompt}</label>
+                    <input class="input" id="${quiz.id}-${q.id}" name="${q.id}" type="text" placeholder="Your answer" value="${answers[q.id] || ''}" ${disable ? 'disabled' : ''} />
+                  </div>
+                `).join('')}
+                <div class="actions">
+                  ${disable ? '<div class="muted">This quiz has been graded. You can view your score above.</div>' : '<button type="submit" class="btn btn-primary">Submit answers</button>'}
+                </div>
+              </form>
+            </div>
+          </section>
+        `;
+      }
+
+      function computeProgress() {
+        const modules = window.contentStore.getModules().filter(m => m.type === 'video');
+        const doneIds = new Set(window.contentStore.getUserCompletions(email).map(c => c.moduleId));
+        const totalVideos = modules.length;
+        const watched = modules.filter(m => doneIds.has(m.id)).length;
+        const pending = Math.max(0, totalVideos - watched);
+        const readCount = (window.progressStore.getReads(email) || []).length;
+        const readTotal = window.progressStore.ARTICLE_IDS.length;
+        const pct = Math.round((readCount / readTotal) * 100) || 0;
+        if (bar) { bar.style.width = pct + '%'; bar.setAttribute('aria-valuenow', String(pct)); }
+        progressEl.innerHTML = `<div class="row"><span class=\"muted\">Information read:</span> <strong>${readCount}/${readTotal}</strong></div>
+          <div class=\"row\"><span class=\"muted\">Videos watched:</span> <strong>${watched}/${totalVideos}</strong></div>
+          <div class=\"muted\">${pending > 0 ? `${pending} video(s) pending` : 'All videos complete'}</div>`;
+      }
+
+      function mount() {
+        computeProgress();
+        if (logout) {
+          logout.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.progressStore.stopTimer(email);
+            window.authStore.clearSession();
+            window.location.replace('index.html');
+          });
+        }
+        // Start/resume timer and update every second
+        window.progressStore.startTimer(email);
+        const tick = () => { if (timer) timer.textContent = window.progressStore.formatMs(window.progressStore.getTime(email)); };
+        tick();
+        setInterval(tick, 1000);
+      }
+
+      mount();
+    });
+  </script>
+</head>
+<body>
+  <main class="container">
+    <section class="card card-wide" aria-labelledby="studentTitle">
+      <div class="card-header">
+        <h1 id="studentTitle" class="card-title">Student Dashboard</h1>
+        <p class="card-subtitle">Your progress and notifications</p>
+      </div>
+      <div class="card-body">
+        <div class="form" style="margin-top:0">
+          <div class="actions" style="margin-top:12px">
+            <a class="btn btn-primary" href="content.html">Learning Content</a>
+            <a class="btn btn-ghost" href="quizzes.html">Go to Quizzes</a>
+            <a class="btn btn-ghost" href="student-information.html">Information</a>
+            <div class="row">
+              <a class="link" href="#" id="logout">Log out</a>
+              <span class="muted"></span>
+              <a class="link" href="student-signup.html">Create another student account</a>
+            </div>
+          </div>
+          <div class="form" style="margin-top:12px">
+            <div class="label">Overall progress</div>
+            <div style="background:#e2e8f0; border-radius:10px; height:12px; overflow:hidden">
+              <div id="bar" style="height:100%; width:0%; background:linear-gradient(90deg,#22c55e,#16a34a); transition: width 400ms ease" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+            </div>
+          </div>
+          <div id="progress" style="margin-top:8px"></div>
+          <div class="row" style="margin-top:8px"><span class="muted">Time spent:</span> <strong><span id="timer">00:00:00</span></strong></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+

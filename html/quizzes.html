@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quizzes • Disastr</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script src="../js/auth.js" defer></script>
+  <script src="../js/quiz.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = window.authStore.getSession();
+      if (!s) { window.location.href = 'index.html'; return; }
+      const email = s.email;
+      const role = s.role;
+      const container = document.getElementById('container');
+      const quizzes = window.quizStore.getQuizzes();
+
+      function studentView() {
+        function renderQuiz(quiz) {
+          const existing = window.quizStore.findSubmission(quiz.id, email);
+          const grade = window.quizStore.findGrade(quiz.id, email);
+          const disable = !!grade;
+          const answers = existing ? existing.answers : {};
+          const formId = `form-${quiz.id}`;
+          return `
+            <section class="card" style="margin-top:16px" aria-labelledby="${quiz.id}-title">
+              <div class="card-header">
+                <h2 id="${quiz.id}-title" class="card-title">${quiz.title}</h2>
+                <p class="card-subtitle">${grade ? `Graded: ${grade.score}/` + quiz.questions.length : (existing ? 'Submitted · awaiting grading' : 'Attempt the quiz')}</p>
+              </div>
+              <div class="card-body">
+                <form class="form" id="${formId}" data-quiz-id="${quiz.id}">
+                  ${quiz.questions.map((q, idx) => `
+                    <div class="field">
+                      <label class="label" for="${quiz.id}-${q.id}">${idx+1}. ${q.prompt}</label>
+                      <input class="input" id="${quiz.id}-${q.id}" name="${q.id}" type="text" placeholder="Your answer" value="${answers[q.id] || ''}" ${disable ? 'disabled' : ''} />
+                    </div>
+                  `).join('')}
+                  <div class="actions">
+                    ${disable ? '<div class="muted">This quiz has been graded. You can view your score above.</div>' : '<button type="submit" class="btn btn-primary">Submit answers</button>'}
+                  </div>
+                </form>
+              </div>
+            </section>
+          `;
+        }
+        container.innerHTML = quizzes.map(renderQuiz).join('');
+        quizzes.forEach(q => {
+          const form = document.getElementById(`form-${q.id}`);
+          if (!form) return;
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const data = new FormData(form);
+            const answers = {};
+            q.questions.forEach(qq => { answers[qq.id] = (data.get(qq.id) || '').toString(); });
+            window.quizStore.saveSubmission({ quizId: q.id, studentEmail: email, answers, submittedAt: Date.now() });
+            alert('Answers submitted! Your teacher will grade them.');
+            studentView();
+          });
+        });
+      }
+
+      function teacherView() {
+        const submissions = window.quizStore.getSubmissions();
+        function renderGradingCard(quiz, submission) {
+          const grade = window.quizStore.findGrade(quiz.id, submission.studentEmail);
+          const formId = `grade-${quiz.id}-${btoa(submission.studentEmail).replace(/=/g,'')}`;
+          return `
+            <section class="card" style="margin-top:16px" aria-labelledby="${formId}-title">
+              <div class="card-header">
+                <h2 id="${formId}-title" class="card-title">${quiz.title} — ${submission.studentEmail}</h2>
+                <p class="card-subtitle">${grade ? `Graded: ${grade.score}/${quiz.questions.length}` : 'Awaiting grade'}</p>
+              </div>
+              <div class="card-body">
+                <div class="form" style="margin-top:0">
+                  ${quiz.questions.map((q, idx) => `
+                    <div class="field">
+                      <label class="label">${idx+1}. ${q.prompt}</label>
+                      <div class="muted">Answer: <strong>${(submission.answers[q.id]||'').replace(/</g,'&lt;')}</strong></div>
+                    </div>
+                  `).join('')}
+                  <form id="${formId}" data-quiz-id="${quiz.id}" data-student="${submission.studentEmail}" class="row" style="margin-top:8px; gap:8px; align-items:center;">
+                    <label class="label" for="${formId}-score">Score</label>
+                    <input class="input" style="max-width:100px" id="${formId}-score" name="score" type="number" min="0" max="${quiz.questions.length}" step="1" value="${grade ? grade.score : ''}" ${grade ? 'disabled' : ''} />
+                    ${grade ? '<span class="muted">Already graded</span>' : '<button class="btn btn-primary" type="submit">Save grade</button>'}
+                  </form>
+                </div>
+              </div>
+            </section>
+          `;
+        }
+        const byQuiz = new Map(quizzes.map(q => [q.id, q]));
+        const items = submissions.map(su => ({ quiz: byQuiz.get(su.quizId), submission: su })).filter(x => !!x.quiz);
+        if (items.length === 0) {
+          container.innerHTML = '<section class="card" style="margin-top:16px"><div class="card-body"><div class="muted">No submissions yet.</div></div></section>';
+        } else {
+          container.innerHTML = items.map(x => renderGradingCard(x.quiz, x.submission)).join('');
+          items.forEach(x => {
+            const formId = `grade-${x.quiz.id}-${btoa(x.submission.studentEmail).replace(/=/g,'')}`;
+            const form = document.getElementById(formId);
+            if (!form) return;
+            form.addEventListener('submit', (e) => {
+              e.preventDefault();
+              const data = new FormData(form);
+              const score = parseInt(data.get('score'), 10);
+              if (Number.isNaN(score)) { alert('Enter a valid score'); return; }
+              window.quizStore.saveGrade({ quizId: x.quiz.id, studentEmail: x.submission.studentEmail, score, gradedAt: Date.now() });
+              alert('Grade saved.');
+              teacherView();
+            });
+          });
+        }
+      }
+
+      function mount() {
+        if (role === 'student') studentView(); else teacherView();
+      }
+
+      mount();
+    });
+  </script>
+</head>
+<body>
+  <main class="container">
+    <section class="card card-wide" aria-labelledby="quizTitle">
+      <div class="card-header">
+        <h1 id="quizTitle" class="card-title">Quizzes</h1>
+        <p class="card-subtitle">${role === 'student' ? 'Attempt quizzes' : 'Review student submissions'}</p>
+      </div>
+      <div class="card-body">
+        <div id="container"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teacher Sign Up • Disastr</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <section class="card" aria-labelledby="teacherSignupTitle">
+      <div class="card-header">
+        <h1 id="teacherSignupTitle" class="card-title">Create a Teacher Account</h1>
+        <p class="card-subtitle">Join as a teacher to start teaching.</p>
+      </div>
+      <div class="card-body">
+        <form class="form" onsubmit="event.preventDefault(); alert('Account created! Redirecting to Teacher Dashboard.'); window.location.href='teacher-dashboard.html';">
+          <div class="field">
+            <label class="label" for="name">Full name</label>
+            <input class="input" id="name" type="text" placeholder="Dr. Taylor" required />
+          </div>
+          <div class="field">
+            <label class="label" for="email">Email</label>
+            <input class="input" id="email" type="email" placeholder="you@example.com" required />
+          </div>
+          <div class="field">
+            <label class="label" for="password">Password</label>
+            <input class="input" id="password" type="password" placeholder="Create a password" minlength="6" required />
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" type="submit">Create account</button>
+            <div class="row">
+              <span class="muted">Already have an account?</span>
+              <a class="link" href="index.html">Log in</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+

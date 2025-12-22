@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teacher • Learning Content</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script src="../js/auth.js" defer></script>
+  <script src="../js/content.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = window.authStore.getSession();
+      if (!s || s.role !== 'teacher') { window.location.replace('index.html'); return; }
+      const list = document.getElementById('list');
+      const modules = window.contentStore.getModules();
+      list.innerHTML = modules.map(m => `
+        <div class="video-card">
+          <div class="vc-body">
+            <div class="vc-title">${m.title}</div>
+            <div class="vc-meta">${m.type} · ${m.durationMin} min</div>
+          </div>
+        </div>
+      `).join('');
+    });
+  </script>
+</head>
+<body>
+  <main class="container">
+    <section class="card card-wide" aria-labelledby="contentTitle">
+      <div class="card-header">
+        <h1 id="contentTitle" class="card-title">Learning Content (Teacher)</h1>
+        <p class="card-subtitle">Browse modules</p>
+      </div>
+      <div class="card-body">
+        <div class="video-grid" id="list"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+

@@ -1,0 +1,9 @@
+Work to do in website 
+
+Add user name 
+create more responsive
+transfer from local to global db
+add chat boat 
+more attractive 
+adding videos
+add more stuff in teacher page.

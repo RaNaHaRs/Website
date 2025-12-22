@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Teacher • Quizzes</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <script src="../js/auth.js" defer></script>
+  <script src="../js/quiz.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = window.authStore.getSession();
+      if (!s || s.role !== 'teacher') { window.location.replace('index.html'); return; }
+      const container = document.getElementById('container');
+      const quizzes = window.quizStore.getQuizzes();
+      const submissions = window.quizStore.getSubmissions();
+
+      function renderGradingCard(quiz, submission) {
+        const grade = window.quizStore.findGrade(quiz.id, submission.studentEmail);
+        const formId = `grade-${quiz.id}-${btoa(submission.studentEmail).replace(/=/g,'')}`;
+        return `
+          <section class="card" style="margin-top:16px" aria-labelledby="${formId}-title">
+            <div class="card-header">
+              <h2 id="${formId}-title" class="card-title">${quiz.title} — ${submission.studentEmail}</h2>
+              <p class="card-subtitle">${grade ? `Graded: ${grade.score}/${quiz.questions.length}` : 'Awaiting grade'}</p>
+            </div>
+            <div class="card-body">
+              <div class="form" style="margin-top:0">
+                ${quiz.questions.map((q, idx) => `
+                  <div class="field">
+                    <label class="label">${idx+1}. ${q.prompt}</label>
+                    <div class="muted">Answer: <strong>${(submission.answers[q.id]||'').replace(/</g,'&lt;')}</strong></div>
+                  </div>
+                `).join('')}
+                <form id="${formId}" data-quiz-id="${quiz.id}" data-student="${submission.studentEmail}" class="row" style="margin-top:8px; gap:8px; align-items:center;">
+                  <label class="label" for="${formId}-score">Score</label>
+                  <input class="input" style="max-width:100px" id="${formId}-score" name="score" type="number" min="0" max="${quiz.questions.length}" step="1" value="${grade ? grade.score : ''}" ${grade ? 'disabled' : ''} />
+                  ${grade ? '<span class="muted">Already graded</span>' : '<button class="btn btn-primary" type="submit">Save grade</button>'}
+                </form>
+              </div>
+            </div>
+          </section>
+        `;
+      }
+
+      function mount() {
+        const byQuiz = new Map(quizzes.map(q => [q.id, q]));
+        const items = submissions.map(s => ({ quiz: byQuiz.get(s.quizId), submission: s })).filter(x => !!x.quiz);
+        if (items.length === 0) {
+          container.innerHTML = '<section class="card" style="margin-top:16px"><div class="card-body"><div class="muted">No submissions yet.</div></div></section>';
+          return;
+        }
+        container.innerHTML = items.map(x => renderGradingCard(x.quiz, x.submission)).join('');
+        items.forEach(x => {
+          const formId = `grade-${x.quiz.id}-${btoa(x.submission.studentEmail).replace(/=/g,'')}`;
+          const form = document.getElementById(formId);
+          if (!form) return;
+          form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const data = new FormData(form);
+            const score = parseInt(data.get('score'), 10);
+            if (Number.isNaN(score)) { alert('Enter a valid score'); return; }
+            window.quizStore.saveGrade({ quizId: x.quiz.id, studentEmail: x.submission.studentEmail, score, gradedAt: Date.now() });
+            alert('Grade saved.');
+            mount();
+          });
+        });
+      }
+
+      mount();
+    });
+  </script>
+</head>
+<body>
+  <main class="container">
+    <section class="card card-wide" aria-labelledby="quizTitle">
+      <div class="card-header">
+        <h1 id="quizTitle" class="card-title">Teacher Quizzes</h1>
+        <p class="card-subtitle">Review and grade submissions</p>
+      </div>
+      <div class="card-body">
+        <div id="container"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+

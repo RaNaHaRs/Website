@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Information • Disastr</title>
+  <link rel="stylesheet" href="../css/styles.css" />
+  <style>
+    .info-wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 20px; }
+    .info-section { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; }
+    .info-header { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; background: #fafbff; }
+    .info-title { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+    .info-body { padding: 20px 24px; display: grid; gap: 12px; }
+    .info-body h3 { margin: 8px 0 4px; font-size: 16px; }
+    .info-body p, .info-body li { color: #334155; line-height: 1.6; }
+    .category-title { font-size: 20px; font-weight: 800; margin: 0; }
+    .info-body[hidden] { display: none; }
+    .acc-btn { width: 100%; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; background: transparent; border: 0; text-align: left; cursor: pointer; padding: 16px 20px; }
+    .acc-btn:hover { background: #f1f5f9; }
+    .preview { display: block; font-size: 13px; color: #64748b; font-weight: 500; margin-top: 4px; }
+    .chev { font-size: 18px; color: #475569; transform: rotate(0deg); transition: transform 160ms ease; }
+    .acc-btn[aria-expanded="true"] .chev { transform: rotate(180deg); }
+  </style>
+  <script src="../js/auth.js" defer></script>
+  <script src="../js/progress.js" defer></script>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      const s = window.authStore.getSession();
+      if (!s || s.role !== 'student') { window.location.replace('index.html'); return; }
+      const email = s.email;
+      document.querySelectorAll('.acc-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('aria-controls');
+          const body = document.getElementById(id);
+          const expanded = btn.getAttribute('aria-expanded') === 'true';
+          btn.setAttribute('aria-expanded', expanded ? 'false' : 'true');
+          if (expanded) { body.setAttribute('hidden', ''); } else { body.removeAttribute('hidden'); }
+        });
+      });
+
+      // Mark as read + quick quiz handlers
+      document.querySelectorAll('[data-article] .mark-read').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const articleId = btn.closest('[data-article]').getAttribute('data-article');
+          window.progressStore.markRead({ email, articleId, completed: true });
+          btn.textContent = 'Marked as read';
+          btn.disabled = true;
+        });
+      });
+      document.querySelectorAll('[data-article] .start-quiz').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const articleId = btn.closest('[data-article]').getAttribute('data-article');
+          const q = window.progressStore.getQuiz(articleId);
+          if (!q) { alert('Quiz not available.'); return; }
+          const choice = prompt(`${q.prompt}\n\n1) ${q.options[0]}\n2) ${q.options[1]}\n3) ${q.options[2]}\n4) ${q.options[3]}\n\nEnter 1-4:`);
+          const idx = (parseInt(choice, 10) || 0) - 1;
+          const correct = idx === q.correctIndex;
+          window.progressStore.saveQuizResult({ email, articleId, correct });
+          alert(correct ? 'Correct! Great job.' : 'Not quite. Review the information and try again.');
+        });
+      });
+    });
+  </script>
+</head>
+<body>
+  <main class="container">
+    <section class="card card-wide" aria-labelledby="infoTop">
+      <div class="card-header">
+        <h1 id="infoTop" class="card-title">Information</h1>
+        <p class="card-subtitle">Understand natural and man-made disasters and how to stay safe</p>
+      </div>
+      <div class="card-body">
+        <div class="info-wrap">
+          <div>
+            <h2 class="category-title">Natural Disasters</h2>
+          </div>
+
+          <article class="info-section" aria-labelledby="cyclone" data-article="cyclone">
+            <button class="info-header acc-btn" aria-expanded="false" aria-controls="cyclone-body">
+              <span class="info-title">Cyclone</span>
+              <span class="chev" aria-hidden="true">▾</span>
+              <span class="preview">Powerful tropical storms bringing strong winds, heavy rain and storm surge.</span>
+            </button>
+            <div class="info-body" id="cyclone-body" hidden>
+              <h3>What it is</h3>
+              <p>A cyclone is a large, powerful storm system that forms over warm ocean waters, with very low pressure at the center (the “eye”), spiraling winds, heavy rain, and storm surge along coasts.</p>
+              <h3>Causes</h3>
+              <ul>
+                <li>Sea surface temperatures typically above ~26–27°C</li>
+                <li>Moist, unstable air and weak vertical wind shear</li>
+                <li>Pre-existing weather disturbance to trigger rotation</li>
+              </ul>
+              <h3>Impacts / Effects</h3>
+              <ul>
+                <li>Strong winds damaging homes, trees, power lines</li>
+                <li>Storm surge flooding coastal areas</li>
+                <li>Heavy rainfall causing inland flooding</li>
+              </ul>
+              <h3>Safety measures</h3>
+              <ul>
+                <li>Follow official warnings; know your evacuation routes</li>
+                <li>Secure loose items, reinforce doors and windows</li>
+                <li>Keep an emergency kit (water, food, torch, radio, medicines)</li>
+                <li>Stay indoors during the storm; avoid floodwaters and downed lines after</li>
+              </ul>
+              <div class="row">
+                <button class="btn btn-primary mark-read" type="button">Mark as read</button>
+                <button class="btn btn-ghost start-quiz" type="button">Start quick quiz</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="info-section" aria-labelledby="heatwave" data-article="heatwave">
+            <button class="info-header acc-btn" aria-expanded="false" aria-controls="heatwave-body">
+              <span class="info-title">Heat Wave</span>
+              <span class="chev" aria-hidden="true">▾</span>
+              <span class="preview">Prolonged, abnormally hot weather that can lead to heat illness.</span>
+            </button>
+            <div class="info-body" id="heatwave-body" hidden>
+              <h3>What it is</h3>
+              <p>A heat wave is a prolonged period of abnormally hot weather that can cause heat stress, dehydration, and serious illness, especially for vulnerable people.</p>
+              <h3>Causes</h3>
+              <ul>
+                <li>Persistent high-pressure systems trapping hot air</li>
+                <li>Urban heat island effect in cities</li>
+                <li>Dry soil and low humidity increasing air temperatures</li>
+              </ul>
+              <h3>Impacts / Effects</h3>
+              <ul>
+                <li>Heat exhaustion, heat stroke; dehydration</li>
+                <li>Power demand spikes; water scarcity; crop stress</li>
+                <li>Wildfire risk increases in dry areas</li>
+              </ul>
+              <h3>Safety measures</h3>
+              <ul>
+                <li>Stay hydrated; avoid outdoor activity in peak afternoon heat</li>
+                <li>Wear light, loose, light-colored clothing; use hats and sunscreen</li>
+                <li>Check on children, elderly, and pets; never leave anyone in parked cars</li>
+                <li>Use ORS or salted drinks if advised; know heat illness signs</li>
+              </ul>
+              <div class="row">
+                <button class="btn btn-primary mark-read" type="button">Mark as read</button>
+                <button class="btn btn-ghost start-quiz" type="button">Start quick quiz</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="info-section" aria-labelledby="tsunami" data-article="tsunami">
+            <button class="info-header acc-btn" aria-expanded="false" aria-controls="tsunami-body">
+              <span class="info-title">Tsunami</span>
+              <span class="chev" aria-hidden="true">▾</span>
+              <span class="preview">Series of large ocean waves that can rapidly flood coasts.</span>
+            </button>
+            <div class="info-body" id="tsunami-body" hidden>
+              <h3>What it is</h3>
+              <p>A tsunami is a series of large ocean waves caused mainly by undersea earthquakes, volcanic eruptions, or landslides, which can rapidly flood coastal areas.</p>
+              <h3>Causes</h3>
+              <ul>
+                <li>Subduction-zone earthquakes displacing the seafloor</li>
+                <li>Underwater landslides or volcanic eruptions</li>
+              </ul>
+              <h3>Impacts / Effects</h3>
+              <ul>
+                <li>Severe coastal inundation and strong currents</li>
+                <li>Damage to buildings, ports, roads; debris hazards</li>
+                <li>Saltwater contamination of water sources and soils</li>
+              </ul>
+              <h3>Safety measures</h3>
+              <ul>
+                <li>Move immediately to higher ground after strong coastal shaking or warnings</li>
+                <li>Know evacuation routes; do not return until authorities say it’s safe</li>
+                <li>Stay away from beaches and river mouths during alerts</li>
+              </ul>
+              <div class="row">
+                <button class="btn btn-primary mark-read" type="button">Mark as read</button>
+                <button class="btn btn-ghost start-quiz" type="button">Start quick quiz</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="info-section" aria-labelledby="landslide" data-article="landslide">
+            <button class="info-header acc-btn" aria-expanded="false" aria-controls="landslide-body">
+              <span class="info-title">Landslide</span>
+              <span class="chev" aria-hidden="true">▾</span>
+              <span class="preview">Sudden downslope movement of rock, soil, or debris.</span>
+            </button>
+            <div class="info-body" id="landslide-body" hidden>
+              <h3>What it is</h3>
+              <p>A landslide is the downward movement of rock, earth, or debris on slopes, often sudden, that can bury roads and buildings.</p>
+              <h3>Causes</h3>
+              <ul>
+                <li>Intense or prolonged rainfall saturating soil</li>
+                <li>Earthquakes, erosion, or human activities (cut slopes, deforestation)</li>
+              </ul>
+              <h3>Impacts / Effects</h3>
+              <ul>
+                <li>Blocked roads and rivers; damage to homes and infrastructure</li>
+                <li>Injury and fatalities; isolation of communities</li>
+              </ul>
+              <h3>Safety measures</h3>
+              <ul>
+                <li>Avoid steep or unstable slopes, especially during/after heavy rain</li>
+                <li>Watch for warning signs: cracks, tilting trees, sudden water changes</li>
+                <li>Follow local advisories; relocate if slope instability is observed</li>
+              </ul>
+              <div class="row">
+                <button class="btn btn-primary mark-read" type="button">Mark as read</button>
+                <button class="btn btn-ghost start-quiz" type="button">Start quick quiz</button>
+              </div>
+            </div>
+          </article>
+
+          <div>
+            <h2 class="category-title">Man-made Disasters</h2>
+          </div>
+
+          <article class="info-section" aria-labelledby="chemical" data-article="chemical">
+            <button class="info-header acc-btn" aria-expanded="false" aria-controls="chemical-body">
+              <span class="info-title">Chemical (Industrial/Chemical Emergencies)</span>
+              <span class="chev" aria-hidden="true">▾</span>
+              <span class="preview">Releases of hazardous chemicals due to leaks, spills, fires, or explosions.</span>
+            </button>
+            <div class="info-body" id="chemical-body" hidden>
+              <h3>What it is</h3>
+              <p>Chemical disasters involve the accidental release of hazardous chemicals (gas leaks, spills, fires, or explosions) that can harm health and the environment.</p>
+              <h3>Causes</h3>
+              <ul>
+                <li>Industrial accidents, storage/transport incidents, or unsafe handling</li>
+                <li>Equipment failure, human error, inadequate safety systems</li>
+              </ul>
+              <h3>Impacts / Effects</h3>
+              <ul>
+                <li>Poisoning, burns, respiratory issues; environmental contamination</li>
+                <li>Evacuations and long-term cleanup requirements</li>
+              </ul>
+              <h3>Safety measures</h3>
+              <ul>
+                <li>During a leak: move away from the source; follow official instructions</li>
+                <li>If told to shelter-in-place: close doors/windows; seal gaps; turn off ventilation</li>
+                <li>Avoid contact with spilled substances; seek medical help if exposed</li>
+              </ul>
+              <div class="row">
+                <button class="btn btn-primary mark-read" type="button">Mark as read</button>
+                <button class="btn btn-ghost start-quiz" type="button">Start quick quiz</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="info-section" aria-labelledby="nuclear" data-article="nuclear">
+            <button class="info-header acc-btn" aria-expanded="false" aria-controls="nuclear-body">
+              <span class="info-title">Nuclear/Radiological</span>
+              <span class="chev" aria-hidden="true">▾</span>
+              <span class="preview">Emergencies involving release of harmful ionizing radiation.</span>
+            </button>
+            <div class="info-body" id="nuclear-body" hidden>
+              <h3>What it is</h3>
+              <p>Nuclear or radiological emergencies involve the release of radiation from a facility, device, or transport accident, which can expose people and the environment to harmful levels of ionizing radiation.</p>
+              <h3>Causes</h3>
+              <ul>
+                <li>Reactor accidents, radiological device incidents, transport/storage failures</li>
+              </ul>
+              <h3>Impacts / Effects</h3>
+              <ul>
+                <li>Radiation exposure leading to acute or long-term health effects</li>
+                <li>Contamination of areas, food, and water</li>
+              </ul>
+              <h3>Safety measures</h3>
+              <ul>
+                <li>Follow evacuation or shelter-in-place orders immediately</li>
+                <li>Limit exposure: stay indoors, close openings; await official guidance</li>
+                <li>Avoid potentially contaminated food/water; follow decontamination advice</li>
+              </ul>
+              <div class="row">
+                <button class="btn btn-primary mark-read" type="button">Mark as read</button>
+                <button class="btn btn-ghost start-quiz" type="button">Start quick quiz</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="info-section" aria-labelledby="biological" data-article="biological">
+            <button class="info-header acc-btn" aria-expanded="false" aria-controls="biological-body">
+              <span class="info-title">Biological</span>
+              <span class="chev" aria-hidden="true">▾</span>
+              <span class="preview">Harmful biological agents that can cause outbreaks and illness.</span>
+            </button>
+            <div class="info-body" id="biological-body" hidden>
+              <h3>What it is</h3>
+              <p>Biological emergencies involve harmful biological agents (like certain bacteria, viruses, or toxins) spreading illness among people, animals, or plants.</p>
+              <h3>Causes</h3>
+              <ul>
+                <li>Accidental release, outbreaks, or deliberate misuse of agents</li>
+              </ul>
+              <h3>Impacts / Effects</h3>
+              <ul>
+                <li>Infectious disease spread; strain on health systems</li>
+                <li>Disruptions to schools, workplaces, and travel</li>
+              </ul>
+              <h3>Safety measures</h3>
+              <ul>
+                <li>Follow public health advisories on hygiene, masks, and distancing</li>
+                <li>Get recommended vaccinations; stay informed from reliable sources</li>
+                <li>Seek medical care if symptomatic; avoid rumors and misinformation</li>
+              </ul>
+              <div class="row">
+                <button class="btn btn-primary mark-read" type="button">Mark as read</button>
+                <button class="btn btn-ghost start-quiz" type="button">Start quick quiz</button>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+

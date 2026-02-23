@@ -1,440 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Login • Disastr</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Society Gate Security System</title>
   <link rel="stylesheet" href="../css/styles.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { 
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue"; 
-      margin: 0; 
-      padding: 0; 
-      height: 100vh; 
-      background: #1a1a1a;
-      overflow: hidden;
-    }
-    
-    .auth-container {
-      position: relative;
-      z-index: 10;
-      height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-    }
-    
-    .auth-content {
-      position: relative;
-      width: 100%;
-      max-width: 420px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .auth-form {
-      position: absolute;
-      width: 100%;
-      transition: all 700ms cubic-bezier(0.4, 0, 0.2, 1);
-      opacity: 1;
-    }
-    
-    .auth-form.login {
-      transform: translateX(0);
-    }
-    
-    .auth-form.login.slide-out {
-      transform: translateX(-120%);
-      opacity: 0;
-    }
-    
-    .auth-form.signup {
-      transform: translateX(120%);
-      opacity: 0;
-    }
-    
-    .auth-form.signup.slide-in {
-      transform: translateX(0);
-      opacity: 1;
-    }
-    
-    .toggle-button {
-      position: fixed;
-      top: 50%;
-      transform: translateY(-50%);
-      transition: all 600ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-      z-index: 1000;
-      padding: 16px 32px;
-      border-radius: 50px;
-      font-weight: 700;
-      font-size: 15px;
-      border: none;
-      cursor: pointer;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-      letter-spacing: 0.5px;
-      min-width: 120px;
-      text-align: center;
-    }
-    
-    .toggle-button.signup-btn {
-      right: 30px;
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: white;
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(-50%) translateX(0);
-    }
-    
-    .toggle-button.signup-btn:hover {
-      background: linear-gradient(135deg, #5a6fd8, #6a4190);
-      transform: translateY(-50%) translateY(-4px) scale(1.05);
-      box-shadow: 0 15px 40px rgba(102, 126, 234, 0.5);
-    }
-    
-    .toggle-button.signup-btn.hidden {
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-50%) translateX(150px) scale(0.8);
-    }
-    
-    .toggle-button.back-btn {
-      left: 30px;
-      background: linear-gradient(135deg, #ff6b6b, #ee5a52);
-      color: white;
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(-50%) translateX(-150px) scale(0.8);
-    }
-    
-    .toggle-button.back-btn:hover {
-      background: linear-gradient(135deg, #ff5252, #e53935);
-      transform: translateY(-50%) translateY(-4px) scale(1.05);
-      box-shadow: 0 15px 40px rgba(255, 107, 107, 0.5);
-    }
-    
-    .toggle-button.back-btn.visible {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(-50%) translateX(0) scale(1);
-    }
-    
-    .card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(25px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 20px;
-      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-      overflow: hidden;
-    }
-    
-    .card-header {
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-    
-    .card-title {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      font-weight: 700;
-    }
-    
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      border: none;
-      border-radius: 12px;
-      padding: 14px 28px;
-      font-weight: 600;
-      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-      transition: all 300ms ease;
-    }
-    
-    .btn-primary:hover {
-      background: linear-gradient(135deg, #5a6fd8, #6a4190);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
-    }
-    
-    .btn-ghost {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: #333;
-      backdrop-filter: blur(10px);
-      border-radius: 10px;
-      transition: all 300ms ease;
-    }
-    
-    .btn-ghost:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateY(-1px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-    }
-    
-    .input {
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      backdrop-filter: blur(10px);
-      border-radius: 12px;
-      padding: 14px 16px;
-      transition: all 300ms ease;
-    }
-    
-    .input:focus {
-      background: rgba(255, 255, 255, 0.95);
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-      transform: translateY(-1px);
-    }
-    
-    .field {
-      margin-bottom: 20px;
-    }
-    
-    .label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 600;
-      color: #374151;
-    }
-    
-    .actions {
-      margin-top: 24px;
-    }
-    
-    .row {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      justify-content: center;
-      margin-top: 16px;
-    }
-    
-    @media (max-width: 768px) {
-      .toggle-button.signup-btn {
-        right: 20px;
-        padding: 12px 20px;
-        font-size: 14px;
-        min-width: 100px;
-      }
-      
-      .toggle-button.back-btn {
-        left: 20px;
-        padding: 12px 20px;
-        font-size: 14px;
-        min-width: 100px;
-      }
-      
-      .auth-content {
-        max-width: 90%;
-        margin: 0 60px;
-      }
-      
-      .auth-form {
-        padding: 0 20px;
-      }
-    }
-    
-    @media (max-width: 480px) {
-      .toggle-button.signup-btn {
-        right: 15px;
-        padding: 10px 16px;
-        font-size: 13px;
-        min-width: 80px;
-      }
-      
-      .toggle-button.back-btn {
-        left: 15px;
-        padding: 10px 16px;
-        font-size: 13px;
-        min-width: 80px;
-      }
-      
-      .auth-content {
-        max-width: 85%;
-        margin: 0 50px;
-      }
-    }
-  </style>
-  <meta name="description" content="Login as Student or Teacher" />
-  <script src="C:\Users\hr160\OneDrive\Desktop\project\js\auth.js" defer></script>
-  <script defer>
-    document.addEventListener('DOMContentLoaded', () => {
-      const loginForm = document.getElementById('loginForm');
-      const signupForm = document.getElementById('signupForm');
-      const loginPanel = document.getElementById('panel-login');
-      const signupPanel = document.getElementById('panel-signup');
-      const signupBtn = document.getElementById('signupBtn');
-      const backBtn = document.getElementById('backBtn');
-      let isSignupActive = false;
-
-      function showSignup() {
-        isSignupActive = true;
-        
-        // Hide Sign Up button with smooth animation
-        signupBtn.classList.add('hidden');
-        
-        // Animate Login form sliding out
-        loginPanel.classList.add('slide-out');
-        
-        // After animations complete, show Sign Up form and Back button
-        setTimeout(() => {
-          signupPanel.classList.add('slide-in');
-          backBtn.classList.remove('hidden');
-          backBtn.classList.add('visible');
-        }, 300);
-      }
-
-      function showLogin() {
-        isSignupActive = false;
-        
-        // Hide Back button with smooth animation
-        backBtn.classList.remove('visible');
-        backBtn.classList.add('hidden');
-        
-        // Animate Sign Up form sliding out
-        signupPanel.classList.remove('slide-in');
-        
-        // After animations complete, show Login form and Sign Up button
-        setTimeout(() => {
-          loginPanel.classList.remove('slide-out');
-          signupBtn.classList.remove('hidden');
-        }, 300);
-      }
-
-      signupBtn.addEventListener('click', showSignup);
-      backBtn.addEventListener('click', showLogin);
-
-      loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const data = new FormData(loginForm);
-        const email = data.get('email');
-        const password = data.get('password');
-        try {
-          const user = window.authStore.loginWithPassword({ email, password });
-          window.location.replace(user.role === 'student' ? 'student-dashboard.html' : 'teacher-dashboard.html');
-        } catch (err) {
-          alert(err.message || 'Login failed');
-        }
-      });
-
-      function providerLogin(provider) {
-        try {
-          const res = window.authStore.loginWithProvider(provider);
-          if (res.pending) {
-            // Need to sign up with role
-            showSignup();
-            document.getElementById('signupEmail').value = res.email;
-            document.getElementById('signupProvider').value = provider;
-          } else {
-            window.location.replace(res.role === 'student' ? 'student-dashboard.html' : 'teacher-dashboard.html');
-          }
-        } catch (err) {
-          alert(err.message || 'Provider login failed');
-        }
-      }
-      document.getElementById('loginGoogle').addEventListener('click', () => providerLogin('Google'));
-      document.getElementById('loginGithub').addEventListener('click', () => providerLogin('GitHub'));
-      document.getElementById('loginApple').addEventListener('click', () => providerLogin('Apple'));
-
-      signupForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const data = new FormData(signupForm);
-        const email = data.get('email');
-        const password = data.get('password');
-        const role = data.get('role');
-        const provider = data.get('provider') || null;
-        try {
-          const user = window.authStore.registerUser({ email, password, role, provider });
-          window.location.replace(user.role === 'student' ? 'student-dashboard.html' : 'teacher-dashboard.html');
-        } catch (err) {
-          alert(err.message || 'Signup failed');
-        }
-      });
-    });
-  </script>
 </head>
 <body>
-  <div class="auth-container">
-    <div class="auth-content">
-      <button class="toggle-button signup-btn" id="signupBtn">Sign Up</button>
-      <button class="toggle-button back-btn" id="backBtn">← Back to Login</button>
-      
-      <div id="panel-login" class="auth-form login">
-        <section class="card" aria-labelledby="loginTitle">
-          <div class="card-header">
-            <h1 id="loginTitle" class="card-title">Welcome Back</h1>
-            <p class="card-subtitle">Sign in to your account</p>
-          </div>
-          <div class="card-body">
-            <form id="loginForm" class="form" autocomplete="on">
-              <div class="field">
-                <label class="label" for="loginEmail">Email</label>
-                <input class="input" id="loginEmail" name="email" type="email" placeholder="you@example.com" required />
-              </div>
-              <div class="field">
-                <label class="label" for="loginPassword">Password</label>
-                <input class="input" id="loginPassword" name="password" type="password" placeholder="••••••••" minlength="6" required />
-              </div>
-              <div class="actions">
-                <button type="submit" class="btn btn-primary">Sign In</button>
-              </div>
-            </form>
-            <div class="row">
-              <button class="btn btn-ghost" id="loginGoogle">Continue with Google</button>
-              <button class="btn btn-ghost" id="loginGithub">GitHub</button>
-              <button class="btn btn-ghost" id="loginApple">Apple</button>
-            </div>
-          </div>
-          <div class="card-footer">
-            By continuing you agree to our <a class="link" href="#" onclick="return false;">Terms</a>.
-          </div>
-        </section>
+  <header class="topbar">
+    <h1>Society Gate Security System</h1>
+    <p>Guard dashboard, residential dashboard, and admin panel in one web app.</p>
+  </header>
+
+  <main class="app-shell">
+    <nav class="tabs" aria-label="Dashboard tabs">
+      <button class="tab active" data-tab="guard">Guard Dashboard</button>
+      <button class="tab" data-tab="resident">Residential Dashboard</button>
+      <button class="tab" data-tab="admin">Admin Panel</button>
+    </nav>
+
+    <section id="guard" class="panel active" aria-label="Guard Dashboard">
+      <div class="grid two-col">
+        <article class="card">
+          <h2>Register Visitor</h2>
+          <form id="visitor-form" class="form">
+            <label>
+              Visitor Name
+              <input class="input" type="text" id="visitorName" required placeholder="e.g. Aman Verma" />
+            </label>
+            <label>
+              Phone Number
+              <input class="input" type="tel" id="visitorPhone" required placeholder="e.g. 9876543210" />
+            </label>
+            <label>
+              Visiting Resident (Flat No.)
+              <input class="input" type="text" id="visitorFlat" required placeholder="e.g. A-203" />
+            </label>
+            <label>
+              Purpose
+              <input class="input" type="text" id="visitorPurpose" required placeholder="e.g. Delivery / Personal visit" />
+            </label>
+            <button type="submit" class="btn btn-primary">Register & Notify Resident</button>
+          </form>
+          <p id="guard-message" class="status" aria-live="polite"></p>
+        </article>
+
+        <article class="card">
+          <h2>Today's Visitor Log</h2>
+          <div id="visitor-log" class="list"></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="resident" class="panel" aria-label="Residential Dashboard">
+      <div class="grid two-col">
+        <article class="card">
+          <h2>Resident Notifications</h2>
+          <label>
+            Select Flat Number
+            <input class="input" id="resident-flat" type="text" placeholder="e.g. A-203" />
+          </label>
+          <button class="btn btn-secondary" id="load-notifications">Load Notifications</button>
+          <div id="resident-notifications" class="list"></div>
+        </article>
+
+        <article class="card">
+          <h2>Add Community Event</h2>
+          <form id="event-form" class="form">
+            <label>
+              Hosted By (Flat / Name)
+              <input class="input" id="eventHost" type="text" required placeholder="e.g. B-105 / Mehta Family" />
+            </label>
+            <label>
+              Event Title
+              <input class="input" id="eventTitle" type="text" required placeholder="e.g. Weekend Yoga Session" />
+            </label>
+            <label>
+              Event Date
+              <input class="input" id="eventDate" type="date" required />
+            </label>
+            <label>
+              Description
+              <textarea class="input" id="eventDescription" rows="3" required placeholder="Share event details"></textarea>
+            </label>
+            <button type="submit" class="btn btn-primary">Publish Event</button>
+          </form>
+          <p id="event-message" class="status" aria-live="polite"></p>
+        </article>
       </div>
 
-      <div id="panel-signup" class="auth-form signup">
-        <section class="card" aria-labelledby="signupTitle">
-          <div class="card-header">
-            <h1 id="signupTitle" class="card-title">Create Account</h1>
-            <p class="card-subtitle">Join as Student or Teacher</p>
-          </div>
-          <div class="card-body">
-            <form id="signupForm" class="form">
-              <input type="hidden" id="signupProvider" name="provider" />
-              <div class="field">
-                <label class="label" for="signupEmail">Email</label>
-                <input class="input" id="signupEmail" name="email" type="email" placeholder="you@example.com" required />
-              </div>
-              <div class="field">
-                <label class="label" for="signupPassword">Password</label>
-                <input class="input" id="signupPassword" name="password" type="password" placeholder="Create a password" minlength="6" required />
-              </div>
-              <div class="field">
-                <label class="label">Role</label>
-                <div class="row" style="justify-content:flex-start; gap:12px">
-                  <label class="muted"><input type="radio" name="role" value="student" required /> Student</label>
-                  <label class="muted"><input type="radio" name="role" value="teacher" required /> Teacher</label>
-                </div>
-              </div>
-              <div class="actions">
-                <button type="submit" class="btn btn-primary">Create Account</button>
-              </div>
-            </form>
-          </div>
-          <div class="card-footer">
-            By continuing you agree to our <a class="link" href="#" onclick="return false;">Terms</a>.
-          </div>
-        </section>
+      <article class="card full-width">
+        <h2>Community Events (Added by Residents)</h2>
+        <div id="events-feed" class="list"></div>
+      </article>
+    </section>
+
+    <section id="admin" class="panel" aria-label="Admin Panel">
+      <div class="grid stats">
+        <article class="card stat"><h3>Total Visitors</h3><p id="stat-visitors">0</p></article>
+        <article class="card stat"><h3>Pending Approvals</h3><p id="stat-pending">0</p></article>
+        <article class="card stat"><h3>Resident Notifications</h3><p id="stat-notifications">0</p></article>
+        <article class="card stat"><h3>Community Events</h3><p id="stat-events">0</p></article>
       </div>
-    </div>
-  </div>
-  <script>window.__APP_TITLE__ = 'Disastr';</script>
+
+      <div class="grid two-col">
+        <article class="card">
+          <h2>Visitor Approval Queue</h2>
+          <div id="admin-visitors" class="list"></div>
+        </article>
+        <article class="card">
+          <h2>Recent Community Events</h2>
+          <div id="admin-events" class="list"></div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="../js/script.js"></script>
 </body>
 </html>
-
-
